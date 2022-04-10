@@ -57,7 +57,7 @@ def get_test_data(test_link):
 	stripped_questions = [div.text for div in questions]
 	stripped_answers = [div.text for div in answers]
 
-	return zip(stripped_questions, stripped_answers)
+	return list(zip(stripped_questions, stripped_answers))
 
 
 def dump_test_data(test_data, test_url_name):
