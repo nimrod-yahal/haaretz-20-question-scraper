@@ -66,10 +66,10 @@ def dump_test_data(test_data, test_url_name):
 			f.write(f'Q: {q}\nA: {a}\n\n')
 
 
-def add_failure(test_url_name, error_message):
-	logging.error(f'{error_message} on test url: {test_url_name}')
+def add_failure(test_url, error_message):
+	logging.error(f'{error_message} on test url: {test_url}')
 	with open(path.join(PRODUCT_PATH, 'failed-urls.txt'), 'a') as f:
-		f.write(f'{error_message}: {test_url_name}\n')
+		f.write(f'{error_message}: \t{urljoin(BASE_URL, test_url)}\n')
 
 
 def main():
@@ -91,9 +91,9 @@ def main():
 			try:
 				dump_test_data(test_data, test_url_name)
 			except:
-				add_failure(test_url_name, 'EXCEPTION')
+				add_failure(test_url, 'EXCEPTION')
 		else:
-			add_failure(test_url_name, 'Anomalous HTML')
+			add_failure(test_url, 'Anomalous HTML')
 
 
 if __name__ == '__main__':
