@@ -86,7 +86,7 @@ def main():
 	if not path.exists(PRODUCT_PATH):
 		os.makedirs(PRODUCT_PATH)
 
-	for test_url in scrape_test_links(999):
+	for test_url in scrape_test_links(15):
 		test_url_name = test_url.split('/')[-1]
 
 		with open(path.join(PRODUCT_PATH, 'index.txt'), 'a') as f:
