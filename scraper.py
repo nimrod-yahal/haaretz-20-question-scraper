@@ -22,11 +22,10 @@ BASE_URL = 'https://www.haaretz.co.il/magazine/20questions/'
 HEADERS = {'User-Agent': 'msnbot/0.3 (+http://search.msn.com/msnbot.htm)'}
 QUESTIONS_CLASS = 'ps pt pu ju jv pv pw'
 ANSWERS_CLASS = 'qy qz ra rb rc rd re rf rg rh ri rj'
+EXPECTED_QUESTIONS_COUNT_PER_TEST = 21
 
 
 def scrape_test_links(max_page_index):
-	links = []
-
 	for index in range(max_page_index + 1):
 		query_json = {
 			'operationName': 'TateQuery', 
@@ -61,9 +60,16 @@ def get_test_data(test_link):
 	return zip(stripped_questions, stripped_answers)
 
 
-def dump_test_data(test_data, file_handler):
-	for q, a in test_data:
-		file_handler.write(f'Q: {q}\nA: {a}\n\n')
+def dump_test_data(test_data, test_url_name):
+	with open(path.join(PRODUCT_PATH, f'{test_url_name}.txt'), 'w') as f:
+		for q, a in test_data:
+			f.write(f'Q: {q}\nA: {a}\n\n')
+
+
+def add_failure(test_url_name, error_message):
+	logging.error(f'{error_message} on test url: {test_url_name}')
+	with open(path.join(PRODUCT_PATH, 'failed-urls.txt'), 'a') as f:
+		f.write(f'{test_url_name}\n')
 
 
 def main():
@@ -81,13 +87,13 @@ def main():
 
 		logging.info(f'Scraping test url: {test_url_name}')
 		test_data = get_test_data(test_url)
-		if test_data:
-			with open(path.join(PRODUCT_PATH, f'{test_url_name}.txt'), 'w') as f:
-				dump_test_data(test_data, f)
+		if len(test_data) == EXPECTED_QUESTIONS_COUNT_PER_TEST:
+			try:
+				dump_test_data(test_data, test_url_name)
+			except:
+				add_failure(test_url_name, 'EXCEPTION')
 		else:
-			logging.error(f'FAILED on test url: {test_url_name}')
-			with open(path.join(PRODUCT_PATH, 'failed-urls.txt'), 'a') as f:
-				f.write(f'{test_url_name}\n')
+			add_failure(test_url_name, 'Anomalous HTML')
 
 
 if __name__ == '__main__':
