@@ -26,8 +26,7 @@ EXPECTED_QUESTIONS_COUNT_PER_TEST = 21
 
 
 def scrape_test_links(max_page_index):
-	index = 0
-	while True:
+	for index in range(max_page_index + 1):
 		query_json = {
 			'operationName': 'TateQuery', 
 			'variables': {
@@ -42,14 +41,8 @@ def scrape_test_links(max_page_index):
 		}
 		response = requests.post(LINK_SCRAPING_URL, headers=LINK_SCRAPING_HEADERS, json=query_json)
 
-		query_result = [item['path'] for item in json.loads(response.text)['data']['list']['items']]
-		if not query_result:
-			break
-
-		for link in query_result:
+		for link in [item['path'] for item in json.loads(response.text)['data']['list']['items']]:
 			yield link
-
-		index += 1
 
 
 def get_test_data(test_link):
