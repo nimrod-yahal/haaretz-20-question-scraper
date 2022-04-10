@@ -69,7 +69,7 @@ def dump_test_data(test_data, test_url_name):
 def add_failure(test_url_name, error_message):
 	logging.error(f'{error_message} on test url: {test_url_name}')
 	with open(path.join(PRODUCT_PATH, 'failed-urls.txt'), 'a') as f:
-		f.write(f'{test_url_name}\n')
+		f.write(f'{error_message}: {test_url_name}\n')
 
 
 def main():
