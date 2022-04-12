@@ -20,8 +20,6 @@ LINK_SCRAPING_QUERY = 'query TateQuery($input: ListInput!) {\n list(input: $inpu
 
 BASE_URL = 'https://www.haaretz.co.il/magazine/20questions/'
 HEADERS = {'User-Agent': 'msnbot/0.3 (+http://search.msn.com/msnbot.htm)'}
-QUESTIONS_CLASS = 'ps pt pu ju jv pv pw'
-ANSWERS_CLASS = 'qy qz ra rb rc rd re rf rg rh ri rj'
 EXPECTED_QUESTIONS_COUNT_PER_TEST = 21
 
 
@@ -45,19 +43,23 @@ def scrape_test_links(max_page_index):
 			yield link
 
 
+def get_question_answer_pair(parsed_html, question_index):
+	parent_div = parsed_html.find_all(attrs={'data-test':f'question-slide-{question_index}'})[0]
+
+	# Performs the div voodoo-navigation to find the question and answer texts
+	question = list(list(parent_div.children)[0].children)[1].text
+	answer = list(list(parent_div.children)[1].children)[0].text
+
+	return question, answer
+
+
 def get_test_data(test_link):
 	url = urljoin(BASE_URL, test_link)
 
 	response = requests.get(url, headers=HEADERS)
 	parsed_html = BeautifulSoup(response.text, features='html.parser')
 
-	questions = parsed_html.body.find_all('div', attrs={'class': QUESTIONS_CLASS})
-	answers = parsed_html.body.find_all('div', attrs={'class': ANSWERS_CLASS})
-
-	stripped_questions = [div.text for div in questions]
-	stripped_answers = [div.text for div in answers]
-
-	return list(zip(stripped_questions, stripped_answers))
+	return [get_question_answer_pair(parsed_html, index) for index in range(1, 22)]
 
 
 def dump_test_data(test_data, test_url_name):
@@ -87,13 +89,13 @@ def main():
 
 		logging.info(f'Scraping test url: {test_url_name}')
 		test_data = get_test_data(test_url)
-		if len(test_data) == EXPECTED_QUESTIONS_COUNT_PER_TEST:
+		if len(test_data) < EXPECTED_QUESTIONS_COUNT_PER_TEST:
+			add_failure(test_url, 'Anomalous HTML')
+		else:
 			try:
 				dump_test_data(test_data, test_url_name)
 			except:
 				add_failure(test_url, 'EXCEPTION')
-		else:
-			add_failure(test_url, 'Anomalous HTML')
 
 
 if __name__ == '__main__':
