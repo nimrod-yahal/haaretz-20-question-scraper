@@ -63,15 +63,32 @@ def get_test_data(test_link):
 
 
 def dump_test_data(test_data, test_url_name):
-	with open(path.join(PRODUCT_PATH, f'{test_url_name}.txt'), 'w') as f:
+	with open(path.join(PRODUCT_PATH, f'{test_url_name}.txt'), 'wb') as f:
 		for q, a in test_data:
-			f.write(f'Q: {q}\nA: {a}\n\n')
+			f.write(f'Q: {q}\nA: {a}\n\n'.encode())
 
 
 def add_failure(test_url, error_message):
 	logging.error(f'{error_message} on test url: {test_url}')
 	with open(path.join(PRODUCT_PATH, 'failed-urls.txt'), 'a') as f:
 		f.write(f'{error_message}: \t{urljoin(BASE_URL, test_url)}\n')
+
+
+def scrape_and_dump_data(test_url):
+	test_url_name = test_url.split('/')[-1]
+
+	with open(path.join(PRODUCT_PATH, 'index.txt'), 'a') as f:
+		f.write(f'{test_url_name}\n')
+
+	logging.info(f'Scraping test url: {test_url_name}')
+	test_data = get_test_data(test_url)
+	if len(test_data) < EXPECTED_QUESTIONS_COUNT_PER_TEST:
+		add_failure(test_url, 'Anomalous HTML')
+	else:
+		try:
+			dump_test_data(test_data, test_url_name)
+		except:
+			add_failure(test_url, 'EXCEPTION')
 
 
 def main():
@@ -82,20 +99,7 @@ def main():
 		os.makedirs(PRODUCT_PATH)
 
 	for test_url in scrape_test_links(15):
-		test_url_name = test_url.split('/')[-1]
-
-		with open(path.join(PRODUCT_PATH, 'index.txt'), 'a') as f:
-			f.write(f'{test_url_name}\n')
-
-		logging.info(f'Scraping test url: {test_url_name}')
-		test_data = get_test_data(test_url)
-		if len(test_data) < EXPECTED_QUESTIONS_COUNT_PER_TEST:
-			add_failure(test_url, 'Anomalous HTML')
-		else:
-			try:
-				dump_test_data(test_data, test_url_name)
-			except:
-				add_failure(test_url, 'EXCEPTION')
+		scrape_and_dump_data(test_url)
 
 
 if __name__ == '__main__':
