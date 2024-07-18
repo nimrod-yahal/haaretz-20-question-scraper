@@ -25,4 +25,7 @@ share/python-wheels/
 MANIFEST
 
 .html
+
 Product/
+old_scraper/Products/
+*.log
